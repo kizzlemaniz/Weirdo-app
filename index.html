@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c1424">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Number Bank">
+  <meta name="description" content="Generate sets, auto-sync historical Powerball numbers, study frequencies and uploaded drawing videos.">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-180.png">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./video-lab.css">
+  <title>Number Bank — Number Generator</title>
+  <script src="./app.js" defer></script>
+  <script src="./historical.js" defer></script>
+  <script src="./video-lab.js" defer></script>
+  <script src="./draw-order-seed.js" defer></script>
+  <script src="./research.js" defer></script>
+  <link rel="stylesheet" href="./research.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div><div class="brand-name">NUMBER BANK</div><div class="brand-tagline">Private number studio + draw research</div></div>
+      </div>
+      <span class="privacy-pill"><span class="privacy-dot"></span> ON-DEVICE</span>
+    </header>
+
+    <main>
+      <section class="intro">
+        <p class="eyebrow">GENERATE · STUDY · COMPARE</p>
+        <h1>Five unique<br><span>white balls.</span></h1>
+        <p class="intro-copy">Five distinct white numbers from <strong>1–69</strong> and one red ball from <strong>1–26</strong>. The red ball can match a white ball under Powerball rules.</p>
+      </section>
+
+      <section class="panel generator-panel" aria-labelledby="generator-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">01 / GENERATOR</p>
+            <h2 id="generator-title">Your next set</h2>
+          </div>
+          <span class="label-chip">5 UNIQUE WHITE</span>
+        </div>
+
+        <div class="ball-labels"><span>5 MAIN NUMBERS <small>01–69</small></span><span>1 SPECIAL <small>01–26</small></span></div>
+        <div class="ball-groups" role="group" aria-label="Current generated set">
+          <div id="main-balls" class="main-balls" aria-live="polite">
+            <span class="ball ball-empty">–</span><span class="ball ball-empty">–</span><span class="ball ball-empty">–</span><span class="ball ball-empty">–</span><span class="ball ball-empty">–</span>
+          </div>
+          <div class="ball-divider"></div>
+          <div id="special-ball" class="special-ball"><span class="ball ball-gold ball-empty">–</span></div>
+        </div>
+        <div id="latest-message" class="latest-message" role="status">Ready to generate a new combination.</div>
+        <label class="strategy-label" for="strategy-select">SELECTION METHOD</label>
+        <select id="strategy-select" class="strategy-select" aria-describedby="strategy-explainer">
+          <option value="historical">History-informed (experimental)</option>
+          <option value="random">Pure random (equal chances)</option>
+        </select>
+        <p id="strategy-explainer" class="strategy-explainer">Automatically considers actual previous draws when downloaded. Historical weighting does not improve the odds of a fair lottery. Until results load, the app uses pure randomness.</p>
+        <label class="matching-option" for="allow-red-match">
+          <input type="checkbox" id="allow-red-match" checked>
+          <span><strong>Allow red ball to match a white ball</strong><small id="matching-mode">Red match allowed (Powerball rules)</small></span>
+        </label>
+        <div class="actions">
+          <button id="generate-btn" class="btn btn-primary" type="button"><span class="btn-symbol" aria-hidden="true">↻</span> Generate &amp; save</button>
+          <button id="copy-btn" class="btn btn-quiet" type="button" disabled><span aria-hidden="true">⧉</span> Copy</button>
+        </div>
+        <p class="helper">The five white balls never repeat. The red ball may match a white ball unless you turn the option off. Exact saved combinations are not regenerated.</p>
+      </section>
+
+      <section class="stats-strip" aria-label="Bank statistics">
+        <div class="stat"><div class="stat-name">SAVED SETS</div><div id="total-count" class="stat-value">0</div></div>
+        <div class="stat-split"></div>
+        <div class="stat"><div class="stat-name">DUPLICATE SETS</div><div class="stat-value">BLOCKED <span class="check-icon" aria-hidden="true">✓</span></div></div>
+      </section>
+
+      <section class="panel manual-panel" aria-labelledby="manual-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">02 / MANUAL ENTRY</p><h2 id="manual-title">Add a previous set</h2></div>
+          <span class="small-diamond" aria-hidden="true">✦</span>
+        </div>
+        <p class="section-desc">Enter five distinct main numbers and one special number. Past combinations are saved alongside newly generated sets. In official Powerball results, the red number is allowed to equal a white number.</p>
+        <form id="manual-form" novalidate>
+          <div class="input-heading"><label>MAIN NUMBERS <span>(1–69)</span></label><label for="manual-special">SPECIAL <span>(1–26)</span></label></div>
+          <div class="input-groups">
+            <div class="manual-main-inputs">
+              <input aria-label="Main number 1" class="number-input" type="number" inputmode="numeric" min="1" max="69" placeholder="01" required>
+              <input aria-label="Main number 2" class="number-input" type="number" inputmode="numeric" min="1" max="69" placeholder="02" required>
+              <input aria-label="Main number 3" class="number-input" type="number" inputmode="numeric" min="1" max="69" placeholder="03" required>
+              <input aria-label="Main number 4" class="number-input" type="number" inputmode="numeric" min="1" max="69" placeholder="04" required>
+              <input aria-label="Main number 5" class="number-input" type="number" inputmode="numeric" min="1" max="69" placeholder="05" required>
+            </div>
+            <div class="manual-special-input"><input id="manual-special" class="number-input number-input-gold" type="number" inputmode="numeric" min="1" max="26" placeholder="06" required></div>
+          </div>
+          <label class="note-label" for="set-note">NOTE <span>OPTIONAL</span></label>
+          <input id="set-note" class="note-input" type="text" maxlength="160" placeholder="Example: June 12 drawing">
+          <p id="manual-error" class="form-error" aria-live="polite"></p>
+          <button class="btn btn-secondary" type="submit">+ Add to my bank</button>
+        </form>
+      </section>
+
+      <section class="panel archive-panel" aria-labelledby="archive-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">03 / SAVED HISTORY</p><h2 id="archive-title">Your number bank</h2></div>
+          <span id="archive-count" class="count-bubble">0</span>
+        </div>
+        <div class="search-wrap">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="search-input" type="search" inputmode="search" aria-label="Search saved sets by number" placeholder="Find number(s), e.g. 12 24" autocomplete="off">
+        </div>
+        <p class="search-help">Searches for sets containing every number you type. Newest saved sets appear first.</p>
+        <div id="history-list" class="history-list" aria-live="polite"><div class="empty-state">No saved numbers yet. Generate a set or add one above.</div></div>
+        <div id="page-controls" class="page-controls" hidden>
+          <button id="prev-page" type="button" class="page-btn">← Newer</button>
+          <span id="page-label">Page 1</span>
+          <button id="next-page" type="button" class="page-btn">Older →</button>
+        </div>
+      </section>
+
+      <section class="panel historical-panel" id="official-history" aria-labelledby="historical-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">04 / AUTOMATIC OFFICIAL RESULTS</p><h2 id="historical-title">Past Powerball drawings</h2></div>
+          <span class="label-chip">AUTO SYNC</span>
+        </div>
+        <p class="section-desc">When online, this app checks the New York State Gaming Commission's public Powerball results, starting October 7, 2015. Results are stored on your iPhone for offline research. The special red ball may match a white ball in official results.</p>
+        <div class="historical-actions">
+          <button id="sync-history" class="btn btn-secondary" type="button">↻ Refresh official results</button>
+          <a href="https://data.ny.gov/d/d6yy-54nr" class="data-source" target="_blank" rel="noopener">View government data ↗</a>
+        </div>
+        <div class="history-sync-status" id="history-sync-status" role="status" aria-live="polite">Checking saved history…</div>
+        <div class="official-stats">
+          <div><small>OFFICIAL DRAWS STORED</small><strong id="official-count">0</strong></div>
+          <div><small>MOST RECENT DRAW</small><strong id="official-latest">—</strong></div>
+        </div>
+        <div class="historical-subheading"><h3>Recent official results</h3><span>Links open the official drawing page</span></div>
+        <div id="official-draw-list" class="official-draw-list"><div class="empty-state">Official records will appear here when synced.</div></div>
+        <button id="more-official" type="button" class="page-btn more-official" hidden>Show older drawings</button>
+        <p class="video-source-hint">Official result pages may link to drawing recordings. Automatically tracking balls in remote videos is not included: livestreams and video archives do not provide a verified unrestricted video feed for this free browser app.</p>
+      </section>
+
+
+      <section class="panel research-panel" id="draw-research" aria-labelledby="research-title">
+        <div class="section-heading"><div><p class="section-kicker">05 / DRAWING RESEARCH</p><h2 id="research-title">Four connected records</h2></div><span class="label-chip">LINKED BY DATE</span></div>
+        <p class="section-desc">For each drawing, link <strong>official results</strong>, <strong>the order of the five white balls</strong>, <strong>video motion and timestamps</strong>, and <strong>equipment observations</strong>. Draw-order entries are kept separate from sorted winning numbers.</p>
+        <div class="research-stats" id="research-stats"><span>Loading drawing studies…</span></div>
+        <div class="research-tools">
+          <label for="study-date"><strong>Drawing date</strong></label>
+          <input type="date" id="study-date" min="2015-10-07">
+          <button id="study-load" class="page-btn" type="button">Load drawing</button>
+        </div>
+        <div id="study-official" class="research-linked">Choose a date to view its stored official results.</div>
+        <div class="research-source-row">
+          <a href="https://www.texaslottery.com/export/sites/lottery/Games/Powerball/Winning_Numbers/index.html_799109696.html" target="_blank" rel="noopener noreferrer">Texas Lottery: official draw-order listing ↗</a>
+          <a href="https://www.powerball.com/watch-drawing" target="_blank" rel="noopener noreferrer">Powerball: drawings ↗</a>
+        </div>
+        <form id="study-form" class="study-form">
+          <h3>Actual white-ball selection order</h3>
+          <p class="field-help">Enter the balls in the order they exited the machine, NOT in ascending order. The app compares them with the official result when available.</p>
+          <div class="order-inputs" id="order-inputs">
+            <input type="number" min="1" max="69" inputmode="numeric" aria-label="1st white ball" placeholder="1st" class="order-input">
+            <input type="number" min="1" max="69" inputmode="numeric" aria-label="2nd white ball" placeholder="2nd" class="order-input">
+            <input type="number" min="1" max="69" inputmode="numeric" aria-label="3rd white ball" placeholder="3rd" class="order-input">
+            <input type="number" min="1" max="69" inputmode="numeric" aria-label="4th white ball" placeholder="4th" class="order-input">
+            <input type="number" min="1" max="69" inputmode="numeric" aria-label="5th white ball" placeholder="5th" class="order-input">
+          </div>
+          <label for="order-provenance">Where did you get the order?</label>
+          <select id="order-provenance" class="study-input"><option value="manual">Personal observation / manually entered</option><option value="texas">Transcribed from Texas Lottery draw-order archive</option><option value="video">Identified while reviewing video</option><option value="import">Imported from a file</option></select>
+          <h3>Equipment observations</h3>
+          <p class="field-help">Use only IDs actually visible or published; leave unknowns blank. These are observations, not official equipment records.</p>
+          <div class="research-grid">
+            <label>White-ball machine ID <input id="white-machine" class="study-input" maxlength="80" placeholder="Unknown / observed ID"></label>
+            <label>Red-ball machine ID <input id="red-machine" class="study-input" maxlength="80" placeholder="Unknown / observed ID"></label>
+            <label>White ball-set ID <input id="white-set" class="study-input" maxlength="80" placeholder="Optional"></label>
+            <label>Red ball-set ID <input id="red-set" class="study-input" maxlength="80" placeholder="Optional"></label>
+            <label>Mixing time (seconds, observed) <input id="mixing-time" class="study-input" min="0" max="3600" step="0.1" type="number" inputmode="decimal" placeholder="Optional"></label>
+            <label>Camera view <select class="study-input" id="camera-view"><option value="">Not recorded</option><option value="fixed">Mostly fixed</option><option value="changing">Camera angle changes / cuts</option><option value="unclear">Unclear</option></select></label>
+          </div>
+          <label for="study-video-url">Drawing video URL (optional)</label>
+          <input id="study-video-url" type="url" class="study-input" placeholder="https://…" inputmode="url">
+          <label for="study-notes">Observations: stirring, airflow, timing, ball paths, uncertainty</label>
+          <textarea id="study-notes" class="study-input" rows="4" maxlength="2000" placeholder="What was actually visible? What was unclear?"></textarea>
+          <div class="study-actions">
+            <button id="save-study" class="btn btn-secondary" type="submit">Save drawing study</button>
+            <button id="attach-video" class="page-btn" type="button">Attach current Video Lab measurements</button>
+            <button id="clear-study" class="page-btn" type="button">Clear this study</button>
+          </div>
+          <div id="study-feedback" role="status" aria-live="polite"></div>
+        </form>
+        <div id="linked-video" class="research-linked">No video measurements linked to this drawing yet.</div>
+        <h3>Compare your recorded drawings</h3>
+        <div id="research-patterns" class="research-linked">No studies yet. Choose a date and save your observations.</div>
+        <h3>Browse linked drawing studies</h3>
+        <div id="study-browser" class="study-browser"></div>
+        <div class="research-tools">
+          <button id="export-studies" class="page-btn" type="button">Export studies CSV</button>
+          <label for="import-order-csv" class="page-btn upload-page-btn">Import draw-order CSV</label>
+          <input id="import-order-csv" class="visually-hidden" type="file" accept=".csv,text/csv,text/plain">
+        </div>
+        <p class="field-help">CSV order import columns: <code>date,first,second,third,fourth,fifth</code>. Import entries are labeled user-supplied until checked against official results. The app includes a 12-draw order snapshot transcribed from the Texas Lottery (Oct–Nov 2026). New draw orders are not downloaded automatically from Texas because direct cross-site access is not guaranteed.</p>
+        <p class="insight-disclaimer">This tool documents possible associations. The video analyzer measures visual frame changes—not individual ball trajectories—and the app has not demonstrated greater prediction accuracy. A physical-bias claim requires enough observations and out-of-sample validation.</p>
+      </section>
+
+      <section class="panel insights-panel" id="insights" aria-labelledby="insights-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">06 / HISTORICAL PATTERNS</p><h2 id="insights-title">Explore your numbers</h2></div>
+          <span class="small-diamond" aria-hidden="true">✧</span>
+        </div>
+        <p class="section-desc">Analyze official past winning numbers separately from your personal saved sets. See recent hot/cold counts and recurring pairs. No historical pattern is proof of improved predictive accuracy.</p>
+        <div class="insights-actions">
+          <button id="analyze-history" class="btn btn-secondary" type="button">Analyze official draws</button>
+          <button id="analyze-my-bank" class="page-btn" type="button">Analyze my generated / manual sets</button>
+        </div>
+        <div id="history-analysis" class="insights-content" role="status" aria-live="polite">Waiting for official drawing data. Use Refresh if needed.</div>
+      </section>
+
+      <section class="panel video-panel" id="video-lab" aria-labelledby="video-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">07 / DRAWING VIDEO LAB</p><h2 id="video-title">Watch ball movement</h2></div>
+          <span class="label-chip">EXPERIMENTAL</span>
+        </div>
+        <p class="section-desc">Use the official drawing pages in the archive above to find past draw details, or upload a video you have permission to use. For an uploaded video, this app measures <strong>visible frame-to-frame motion</strong> while it plays on your iPhone. Open a date in the Drawing Research section to link these measurements to an official result. It cannot reliably identify every moving ball or forecast the winning numbers.</p>
+        <a class="video-official-link" href="https://www.powerball.com/watch-drawing" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">◉</span> Watch official Powerball drawing <span aria-hidden="true">↗</span></a>
+        <p class="video-source-hint">The livestream and remote video archives open outside the app. Automatic remote ball tracking is not supported by this free static app; recordings you choose locally can be analyzed for overall visible motion. <a href="#draw-research">Return to the Drawing Research section to attach measurements to a date.</a></p>
+        <label class="video-upload" for="video-file"><span aria-hidden="true">▣</span><span><strong>Select a drawing video</strong><small>Video stays on your device and is not uploaded</small></span></label>
+        <input class="visually-hidden" id="video-file" type="file" accept="video/*">
+        <div class="video-player-wrap" id="video-player-wrap" hidden>
+          <video id="drawing-video" controls playsinline preload="metadata" aria-label="Drawing video for analysis"></video>
+          <div class="video-toolrow"><button type="button" id="reset-video" class="page-btn">Reset analysis</button><span id="video-filename" class="video-file-label"></span></div>
+          <div id="video-status" class="video-status" role="status">Press Play to begin measuring motion.</div>
+          <canvas id="motion-chart" class="motion-chart" width="640" height="200" aria-label="Video motion intensity by playback time" role="img"></canvas>
+          <div class="video-stats">
+            <div><span>FRAME SAMPLES</span><strong id="motion-samples">0</strong></div>
+            <div><span>AVG. MOTION</span><strong id="motion-average">—</strong></div>
+            <div><span>PEAK MOTION</span><strong id="motion-peak">—</strong></div>
+          </div>
+          <p class="video-source-hint">Motion is estimated from pixel changes, not from identified ball numbers. Camera cuts, zooms, lighting and compression can alter measurements. No prediction advantage has been demonstrated.</p>
+          <div class="marking-area">
+            <h3>Mark balls as they appear</h3>
+            <p>While reviewing the video, you can manually tag a number and the moment it appears. After marking five main balls and one special ball, save the result to your bank.</p>
+            <div class="marking-controls">
+              <select id="observed-type" aria-label="Ball type"><option value="main">White (1–69)</option><option value="special">Special (1–26)</option></select>
+              <input id="observed-number" type="number" min="1" max="69" inputmode="numeric" placeholder="No." aria-label="Observed ball number">
+              <button id="mark-observed" class="btn btn-secondary" type="button">Mark at this time</button>
+            </div>
+            <div id="marker-list" class="marker-list">No balls marked yet.</div>
+            <div class="video-toolrow"><button id="save-observed" class="btn btn-secondary" type="button">Save marked result</button><button id="export-video-report" class="page-btn" type="button">Export analysis CSV</button></div>
+            <div id="video-feedback" class="video-feedback" role="status"></div>
+          </div>
+        </div>
+        <canvas id="video-sample-canvas" width="112" height="64" hidden></canvas>
+      </section>
+
+      <section class="panel tools-panel" aria-labelledby="tools-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">08 / BACKUP &amp; RESTORE</p><h2 id="tools-title">Keep your bank safe</h2></div>
+        </div>
+        <p class="section-desc">Your generated sets, drawing studies, video summaries and equipment notes stay on this device. JSON backup includes your personal sets and studies; public official results can be re-synced.</p>
+        <div class="tool-grid">
+          <button id="export-json" class="tool-btn" type="button"><span aria-hidden="true">⇩</span><strong>Backup JSON</strong><small>Sets + drawing studies</small></button>
+          <button id="export-csv" class="tool-btn" type="button"><span aria-hidden="true">▤</span><strong>Export CSV</strong><small>Open in spreadsheets</small></button>
+          <label class="tool-btn tool-upload" for="import-file"><span aria-hidden="true">⇧</span><strong>Import bank + studies</strong><small>CSV or JSON file</small></label>
+          <input id="import-file" class="visually-hidden" type="file" accept=".json,.csv,application/json,text/csv,text/plain">
+        </div>
+        <p id="import-result" class="import-result" role="status"></p>
+        <div class="danger-zone"><button id="clear-bank" type="button" class="danger-btn">Erase all saved sets</button><span>Irreversible without a backup</span></div>
+      </section>
+    </main>
+
+    <footer class="footer"><span>NUMBER BANK <span aria-hidden="true">✦</span> PRIVATE BY DESIGN</span><p>No account. No server. No artificial bank size limit.</p></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

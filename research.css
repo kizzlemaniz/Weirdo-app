@@ -1,0 +1,45 @@
+/* Drawing-research views; inherits Number Bank color palette and type styles. */
+.matching-option{display:flex;align-items:center;gap:12px;margin:14px 0 12px;padding:13px 14px;border:1px solid #345064;border-radius:12px;background:#102438;cursor:pointer}
+.matching-option input{width:22px;height:22px;flex-shrink:0;accent-color:#b8f39a}
+.matching-option span{display:flex;flex-direction:column;gap:5px;font-size:14px;color:#f0faf7}
+.matching-option small{color:#98bac5;font-size:12px}
+.research-panel .section-desc{margin-bottom:18px}
+.research-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
+.research-stat{border:1px solid #28445b;border-radius:13px;padding:12px;background:#0b1e31;display:flex;flex-direction:column;gap:6px}
+.research-stat small{font-size:10px;color:#95b9c6;letter-spacing:.07em}
+.research-stat strong{font-size:23px;color:#ecf9ff}
+.research-tools,.study-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:14px 0}
+.research-tools label strong{font-size:13px}
+.research-tools input[type=date]{padding:12px;border:1px solid #496677;border-radius:10px;background:#12293d;color:#fff;color-scheme:dark;max-width:180px;min-height:42px}
+.research-linked{border:1px solid #315063;background:#10283c;padding:15px;border-radius:12px;color:#cddfe7;line-height:1.55;font-size:13px;margin:12px 0}
+.research-linked strong{display:block;margin-bottom:5px;color:#eefbf7;font-size:14px}
+.research-linked a,.research-source-row a{color:#b8f39a;text-underline-offset:3px}
+.research-linked small{display:block;color:#9ab8c4;margin-top:7px}
+.research-source-row{display:flex;flex-direction:column;gap:8px;font-size:13px;margin:14px 0}
+.study-form h3,.research-panel h3{font-size:16px;color:#f2fcff;margin:22px 0 8px}
+.field-help{font-size:12px;color:#a2bfce;line-height:1.55;margin:9px 0}
+.study-form label:not(.matching-option){display:block;color:#d9eef3;font-size:12px;font-weight:650;margin:12px 0 7px}
+.order-inputs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:12px 0 15px}
+.order-input{width:100%;min-width:0;min-height:52px;text-align:center;background:#102a40;color:#fff;border:1px solid #526f7d;border-radius:10px;font-size:17px;padding:5px 0}
+.study-input{display:block;width:100%;min-width:0;max-width:100%;padding:11px;background:#102a40;color:#f2faff;border:1px solid #526f7d;border-radius:10px;min-height:44px;font-size:14px;box-sizing:border-box}
+textarea.study-input{resize:vertical;min-height:90px;font:inherit}
+.research-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px}
+.study-actions .btn,.study-actions .page-btn{flex:1;min-width:145px}
+#study-feedback{min-height:1.25em;font-size:13px;margin:11px 0}
+.research-error{color:#ffb2a7}.research-success{color:#b8f39a}
+.comparison-list{margin:8px 0 12px;padding-left:18px;display:flex;flex-direction:column;gap:8px}
+.upload-page-btn{cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.study-link{font-size:12px;margin-top:8px;padding:9px 11px}
+.research-panel{scroll-margin-top:12px}
+@media(max-width:450px){.research-grid{grid-template-columns:1fr}.research-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.research-tools input[type=date]{max-width:100%}.study-actions .btn,.study-actions .page-btn{min-width:100%}}
+
+.study-browser{display:flex;flex-direction:column;gap:7px;margin:10px 0}
+.study-browser-row{width:100%;border:1px solid #355467;background:#10283a;color:#edf8fc;padding:11px 12px;border-radius:10px;text-align:left;display:flex;flex-direction:column;gap:5px;cursor:pointer}
+.study-browser-row strong{font-size:13px}.study-browser-row span{font-size:11px;color:#afc9d2;line-height:1.4}
+.study-browser-row:hover{border-color:#b8f39a}
+/* Powerball's special ball is red; retain original class names for upgrade safety. */
+.ball-gold{background:#d94153;color:#fff;box-shadow:inset 0 -4px 0 #a92338,0 5px 10px #030f1940}
+.mini-special{background:#d94153;color:#fff;box-shadow:inset 0 -2px 0 #a92338}
+.number-input-gold{color:#ff9daa;border-color:#ac4354}
+.number-input-gold:focus{border-color:#e96271;box-shadow:0 0 0 2px #e9627125}
+.marker-chip.special{background:#5a2431;color:#ffdde1;border-color:#ac4354}
