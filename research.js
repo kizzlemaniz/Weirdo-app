@@ -25,36 +25,62 @@
     if (published && sorted(numbers).join(',') !== published.main.join(','))
       throw new Error('The five numbers do not match the published winning numbers for this date. Check the drawing date and ball order.');
   }
+  // On iOS, moving between the video picker and this screen may leave an old
+  // IDBDatabase object in the 'closing' state. Reconnect and retry once rather
+  // than losing the current in-memory Video Lab measurements.
+  let reopeningDatabase = null;
+  function isClosedConnection(error) {
+    const description = String(error?.message || '');
+    return error?.name === 'InvalidStateError' &&
+      /clos(e|ing|ed)|connection|database|transaction/i.test(description) ||
+      /database connection is closing|database is closed|connection is closing/i.test(description);
+  }
+  async function reconnectForStudy() {
+    if (!reopeningDatabase) {
+      reopeningDatabase = openDatabase()
+        .then(connection => { db = connection; return connection; })
+        .finally(() => { reopeningDatabase = null; });
+    }
+    return reopeningDatabase;
+  }
+  async function studyTransaction(operation) {
+    try { return await operation(); }
+    catch (error) {
+      if (!isClosedConnection(error)) throw error;
+      await reconnectForStudy();
+      return await operation();
+    }
+  }
   function readAll() {
-    return new Promise((resolve,reject)=>{
+    return studyTransaction(() => new Promise((resolve,reject)=>{
       const req=db.transaction(STORE,'readonly').objectStore(STORE).getAll();
       req.onsuccess=()=>resolve(req.result.sort((a,b)=>b.date.localeCompare(a.date)));
       req.onerror=()=>reject(req.error);
-    });
+    }));
   }
   function get(date) {
-    return new Promise((resolve,reject)=>{
+    return studyTransaction(() => new Promise((resolve,reject)=>{
       const req=db.transaction(STORE,'readonly').objectStore(STORE).get(date);
       req.onsuccess=()=>resolve(req.result||null);
       req.onerror=()=>reject(req.error);
-    });
+    }));
   }
   function put(row) {
-    return new Promise((resolve,reject)=>{
+    return studyTransaction(() => new Promise((resolve,reject)=>{
       const tx=db.transaction(STORE,'readwrite');
       tx.objectStore(STORE).put(row);
       tx.oncomplete=resolve;
       tx.onerror=()=>reject(tx.error);
       tx.onabort=()=>reject(tx.error);
-    });
+    }));
   }
   function remove(date) {
-    return new Promise((resolve,reject)=>{
+    return studyTransaction(() => new Promise((resolve,reject)=>{
       const tx=db.transaction(STORE,'readwrite');
       tx.objectStore(STORE).delete(date);
       tx.oncomplete=resolve;
       tx.onerror=()=>reject(tx.error);
-    });
+    }));
   }
   function msg(value, error=false) {
     const el=$r('study-feedback');

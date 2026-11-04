@@ -1,5 +1,5 @@
 /* Bump this cache name when publishing changes to the app. */
-const CACHE_NAME = 'number-bank-video-lab-v4';
+const CACHE_NAME = 'number-bank-video-lab-v4-idb-repair-1';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './video-lab.js', './historical.js', './video-lab.css', './research.js', './research.css', './draw-order-seed.js', './icon-192.png', './icon-512.png', './icon-180.png'
