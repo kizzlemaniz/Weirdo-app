@@ -1,8 +1,8 @@
 /* Bump this cache name when publishing changes to the app. */
-const CACHE_NAME = 'number-bank-video-lab-v4-idb-repair-1';
+const CACHE_NAME = 'number-bank-research-v5-20261104';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest',
-  './video-lab.js', './historical.js', './video-lab.css', './research.js', './research.css', './draw-order-seed.js', './icon-192.png', './icon-512.png', './icon-180.png'
+  './video-lab.js', './historical.js', './research-model.js', './video-lab.css', './research.js', './research.css', './draw-order-seed.js', './icon-192.png', './icon-512.png', './icon-180.png'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME)

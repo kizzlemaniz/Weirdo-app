@@ -109,6 +109,10 @@ function secureRandomIndex(length) {
 function redCanMatch() { return $('allow-red-match')?.checked !== false; }
 function makeSet() {
   const allow = redCanMatch();
+  if ($('strategy-select')?.value === 'research') {
+    const modelChoice = window.ResearchModel?.sample?.(window.ResearchModel.getSnapshot(), allow);
+    if (modelChoice) return makeRecord(modelChoice.main, modelChoice.special, 'generated', 'Research-informed (experimental)');
+  }
   const historyChoice = $('strategy-select')?.value === 'historical'
     ? window.HistoryLab?.makeWeightedSet?.(allow) : null;
   if (historyChoice) return makeRecord(historyChoice.main, historyChoice.special, 'generated',
@@ -163,6 +167,7 @@ async function generateAndSave() {
   const button = $('generate-btn');
   button.disabled = true;
   try {
+    if ($('strategy-select')?.value === 'research') await window.ResearchModel?.refresh?.();
     // Very unlikely to need more than one draw, but the bank's unique key enforces it.
     for (let tries = 0; tries < 500; tries++) {
       const candidate = makeSet();
@@ -172,7 +177,7 @@ async function generateAndSave() {
         lastGenerated = candidate;
         displaySet(candidate);
         $('copy-btn').disabled = false;
-        const mode = candidate.note ? 'Historical weighting · experimental' : 'Fair random';
+        const mode = candidate.note?.startsWith('Research-') ? 'Research-informed · experimental' : candidate.note ? 'Historical weighting · experimental' : 'Fair random';
         $('latest-message').textContent = mode + ' · Saved ' + timeLabel(candidate.createdAt);
         await refreshBank();
         toast('New unique set saved!');

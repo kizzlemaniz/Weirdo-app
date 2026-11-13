@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0c1424">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Number Bank">
+  <meta name="apple-mobile-web-app-title" content="Weirdo App">
   <meta name="description" content="Generate sets, auto-sync historical Powerball numbers, study frequencies and uploaded drawing videos.">
   <meta name="format-detection" content="telephone=no">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -14,12 +14,13 @@
   <link rel="apple-touch-icon" href="./icon-180.png">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./video-lab.css">
-  <title>Number Bank — Number Generator</title>
+  <title>Weirdo App</title>
   <script src="./app.js" defer></script>
   <script src="./historical.js" defer></script>
   <script src="./video-lab.js" defer></script>
   <script src="./draw-order-seed.js" defer></script>
   <script src="./research.js" defer></script>
+  <script src="./research-model.js" defer></script>
   <link rel="stylesheet" href="./research.css">
 </head>
 <body>
@@ -27,7 +28,7 @@
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-        <div><div class="brand-name">NUMBER BANK</div><div class="brand-tagline">Private number studio + draw research</div></div>
+        <div><div class="brand-name">WEIRDO APP</div><div class="brand-tagline">Personal project studio</div></div>
       </div>
       <span class="privacy-pill"><span class="privacy-dot"></span> ON-DEVICE</span>
     </header>
@@ -59,10 +60,21 @@
         <div id="latest-message" class="latest-message" role="status">Ready to generate a new combination.</div>
         <label class="strategy-label" for="strategy-select">SELECTION METHOD</label>
         <select id="strategy-select" class="strategy-select" aria-describedby="strategy-explainer">
+          <option value="research" selected>Research-informed (adaptive experiment)</option>
           <option value="historical">History-informed (experimental)</option>
           <option value="random">Pure random (equal chances)</option>
         </select>
-        <p id="strategy-explainer" class="strategy-explainer">Automatically considers actual previous draws when downloaded. Historical weighting does not improve the odds of a fair lottery. Until results load, the app uses pure randomness.</p>
+        <p id="strategy-explainer" class="strategy-explainer">Research-informed combines historical winning results with saved draw-order and video studies. No measured predictive advantage. Without official history, selection falls back to fair randomness.</p>
+        <div class="model-status" aria-label="Adaptive research inputs">
+          <p class="model-heading">RESEARCH-INFORMED ENGINE · V5</p>
+          <p id="research-model-summary" aria-live="polite">Loading local history and drawing research…</p>
+          <p id="research-model-detail" class="model-detail">Numbers are selected with bounded experimental weights, always retaining randomness.</p>
+          <div class="model-actions">
+            <button id="refresh-model" type="button" class="page-btn">↻ Recheck saved studies</button>
+            <button id="run-model-test" type="button" class="page-btn">Test vs fair random</button>
+          </div>
+          <div id="model-test-result" class="model-test" aria-live="polite">Testing uses only earlier results to assess subsequent historical draws. It cannot validate video studies without later draws.</div>
+        </div>
         <label class="matching-option" for="allow-red-match">
           <input type="checkbox" id="allow-red-match" checked>
           <span><strong>Allow red ball to match a white ball</strong><small id="matching-mode">Red match allowed (Powerball rules)</small></span>
@@ -71,7 +83,7 @@
           <button id="generate-btn" class="btn btn-primary" type="button"><span class="btn-symbol" aria-hidden="true">↻</span> Generate &amp; save</button>
           <button id="copy-btn" class="btn btn-quiet" type="button" disabled><span aria-hidden="true">⧉</span> Copy</button>
         </div>
-        <p class="helper">The five white balls never repeat. The red ball may match a white ball unless you turn the option off. Exact saved combinations are not regenerated.</p>
+        <p class="helper">The five white balls never repeat. The red ball may match a white ball unless you turn the option off. Exact saved combinations are not regenerated. Generated/manual picks aren't treated as winning outcomes.</p>
       </section>
 
       <section class="stats-strip" aria-label="Bank statistics">
@@ -272,7 +284,7 @@
       </section>
     </main>
 
-    <footer class="footer"><span>NUMBER BANK <span aria-hidden="true">✦</span> PRIVATE BY DESIGN</span><p>No account. No server. No artificial bank size limit.</p></footer>
+    <footer class="footer"><span>WEIRDO APP <span aria-hidden="true">✦</span> PRIVATE BY DESIGN</span><p>No account. No server. No artificial bank size limit.</p></footer>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>

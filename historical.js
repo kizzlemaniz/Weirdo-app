@@ -89,6 +89,7 @@
       renderArchive();
       showInsights();
       window.ResearchLab?.onHistorySync();
+      document.dispatchEvent(new Event('official-history-updated'));
       status(`Updated ${draws.length.toLocaleString()} official drawings · Last checked ${new Date(lastSuccess).toLocaleString()}`);
     } catch (error) {
       console.warn('Unable to refresh official draw history:', error);
@@ -149,10 +150,20 @@
     stats = {mainCounts, redCounts, recentWhite, recentRed, recentN,
       pairs: [...pairs.entries()].sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0,7)};
     const explainer = el('strategy-explainer');
-    if (explainer) explainer.textContent = draws.length
-      ? `Using ${draws.length.toLocaleString()} historical results, giving modest extra weight to numbers more frequent in the last ${recentN} draws. This is experimental, not a statistically proven prediction advantage.`
-      : 'When official results are unavailable, history-informed mode falls back to pure randomness. Past draws cannot reliably predict fair future draws.';
+    updateStrategyExplainer();
   }
+
+  function updateStrategyExplainer() {
+    const explainer = el('strategy-explainer');
+    if (!explainer) return;
+    const choice = el('strategy-select')?.value;
+    if (choice === 'research') explainer.textContent = 'Adaptive research mode uses saved official draws, ordered results, video measurements and structured observations with cautious experimental weighting. It cannot establish better lottery odds.';
+    else if (choice === 'historical') explainer.textContent = draws.length
+      ? `Using ${draws.length.toLocaleString()} historical results, giving modest extra weight to numbers more frequent in the last ${Math.min(draws.length,120)} draws. Experimental, not proven to improve prediction.`
+      : 'Historical records are not available: falling back to pure random.';
+    else explainer.textContent = 'Every eligible number has equal weight. Saved combinations are still checked to avoid exact repeats.';
+  }
+
   // CSPRNG-based weighted selection, without replacement. No Math.random dependency.
   function weightedChoice(candidates, count, expected) {
     const max = Math.max(...count.slice(1));
@@ -253,6 +264,7 @@
     // Check periodically while the app remains open; iOS may suspend this timer in the background.
     setInterval(() => { if (!document.hidden && db) refresh(); }, 30 * 60 * 1000);
     el('strategy-select').addEventListener('change',()=>{
+      updateStrategyExplainer();
       if(el('strategy-select').value === 'historical' && !draws.length)
         status('Historical weighting is selected, but official results have not loaded; using fair random instead.');
     });

@@ -197,6 +197,7 @@
       currentDate=date;activeStudy=row;studies=await readAll();
       drawOfficial(date);summarizeVideo(row);renderStats();renderPatterns();
       msg('Drawing study saved locally. It is included in your JSON backup.');
+      document.dispatchEvent(new Event('research-data-updated'));
     } catch(error) {msg('Could not save: '+error.message,true);}
   }
   async function attachVideo() {
@@ -221,6 +222,7 @@
       if(currentDate!==date) currentDate=date;
       assignFields(row);drawOfficial(date);summarizeVideo(row);renderStats();renderPatterns();
       msg('Video samples and timestamp markers attached. Original video stays on your device and is not saved.');
+      document.dispatchEvent(new Event('research-data-updated'));
     } catch(error) {msg('Could not attach video: '+error.message,true);}
   }
   async function deleteStudy() {
@@ -230,6 +232,7 @@
     await remove(date);studies=await readAll();activeStudy=null;
     assignFields(null);summarizeVideo(null);renderStats();renderPatterns();
     msg('Drawing study removed. The saved official result was not deleted.');
+    document.dispatchEvent(new Event('research-data-updated'));
   }
   async function seedOrders() {
     // Only insert missing dates: preserves user edits and device data.
@@ -318,6 +321,7 @@
       }catch(e){console.warn('Skipped malformed study:',s?.date,e.message);}
     }
     studies=await readAll();renderStats();renderPatterns();
+    document.dispatchEvent(new Event('research-data-updated'));
     return {added};
   }
   async function importDrawOrderCSV(ev) {
