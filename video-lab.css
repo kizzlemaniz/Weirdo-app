@@ -27,3 +27,20 @@
 .insights-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .insights-actions .btn{width:auto;flex:1;min-width:200px}
 @media(max-width:380px){.official-draw-row .mini-ball{width:28px;height:28px;font-size:11px}.official-draw-row .entry-balls{gap:4px}}
+
+/* V6 loading-rack study tools; all tracking remains on-device */
+.rack-panel{border-top:1px solid #36505f;margin-top:24px;padding-top:22px}
+.rack-panel h3{font-size:16px;margin:0 0 8px;color:#ecf5f6}
+.rack-preview,.rack-zoom{width:100%;height:auto;display:block;border:1px solid #456577;border-radius:12px;background:#0c1c2d;touch-action:none;margin-top:12px}
+.rack-preview{cursor:crosshair;aspect-ratio:16 / 9}
+.rack-zoom{aspect-ratio:16 / 9}
+.rack-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.rack-controls label,.rack-label{display:block;color:#c9e2e9;font-size:11px;font-weight:700;line-height:1.5}
+.rack-controls select,.rack-controls input{display:block;width:100%;margin-top:5px;min-width:0}
+.rack-label{margin-top:13px}
+.rack-label + textarea{margin-top:6px;width:100%}
+.rack-help{font-size:11px;line-height:1.6;color:#b2cfdb;margin:12px 0}
+.rack-stats{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+.rack-stats span{flex:1;min-width:90px;background:#213747;padding:9px;border-radius:9px;font-size:9px;color:#a3bbc3}
+.rack-stats strong{display:block;font-size:17px;color:#d6f5c0;margin-top:6px}
+@media(max-width:380px){.rack-controls{grid-template-columns:1fr}}

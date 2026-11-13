@@ -135,6 +135,12 @@
     const body=document.createElement('p');
     body.textContent=`${video.filename||'Local video'} · ${video.sampleCount||0} frame samples · mean motion ${video.averageMotion==null?'—':video.averageMotion+'/100'} · peak ${video.peakMotion==null?'—':video.peakMotion+'/100'} · ${video.markers?.length||0} timestamp markers`;
     target.append(title,body);
+    if (video.rack) {
+      const r=video.rack;const p=document.createElement('p');
+      p.textContent=`Loading rack: ${r.group||'unknown'} · ${r.sampleCount||0} motion samples · avg ${r.averageMotion==null?'—':r.averageMotion+'/100'} · release ${r.releaseTime==null?'not marked':Number(r.releaseTime).toFixed(1)+'s'} · loading order ${r.loadingOrder||'unverified'} · digits ${r.legibility||'unknown'}.`;
+      target.append(p);
+      if(r.notes){const small=document.createElement('small');small.textContent='Rack notes: '+r.notes;target.append(small);}
+    }
     if (video.markers?.length) {
       const p=document.createElement('p');p.textContent=video.markers.map(m=>`${m.type==='main'?'White':'Red'} ${fmt(m.number)} at ${Number(m.time).toFixed(1)}s`).join(' · ');
       target.append(p);
@@ -205,7 +211,7 @@
       const date=$r('study-date').value;
       if (!validDate(date)) throw new Error('First select a valid drawing date.');
       const snapshot=window.VideoLab?.getSnapshot();
-      if (!snapshot || (!snapshot.sampleCount && !snapshot.markers.length))
+      if (!snapshot || (!snapshot.sampleCount && !snapshot.markers.length && !snapshot.rack?.sampleCount))
         throw new Error('First choose a local video in Video Lab and play some frames or mark balls.');
       const row=await get(date)||defaultRow(date);
       if (snapshot.markers.length===6) {
@@ -221,7 +227,7 @@
       await put(row);activeStudy=row;studies=await readAll();
       if(currentDate!==date) currentDate=date;
       assignFields(row);drawOfficial(date);summarizeVideo(row);renderStats();renderPatterns();
-      msg('Video samples and timestamp markers attached. Original video stays on your device and is not saved.');
+      msg('Video and rack-region measurements attached. Original video and captured rack image remain on your device.');
       document.dispatchEvent(new Event('research-data-updated'));
     } catch(error) {msg('Could not attach video: '+error.message,true);}
   }
@@ -250,7 +256,7 @@
     const video=studies.filter(s=>s.video?.sampleCount>0);
     const equipment=studies.filter(s=>s.equipment?.whiteMachine||s.equipment?.redMachine||s.equipment?.whiteSet||s.equipment?.mixingSeconds!=null);
     $r('research-stats').replaceChildren();
-    for(const [label,value] of [['DRAW ORDERS',withOrder.length],['VIDEO STUDIES',video.length],['EQUIPMENT NOTES',equipment.length],['TOTAL DATE RECORDS',studies.length]]) {
+    for(const [label,value] of [['DRAW ORDERS',withOrder.length],['VIDEO STUDIES',video.length],['RACK STUDIES',studies.filter(s=>s.video?.rack?.sampleCount>0).length],['EQUIPMENT NOTES',equipment.length],['TOTAL DATE RECORDS',studies.length]]) {
       const card=document.createElement('div');card.className='research-stat';
       const small=document.createElement('small');small.textContent=label;
       const strong=document.createElement('strong');strong.textContent=value.toLocaleString();
@@ -265,7 +271,7 @@
       const button=document.createElement('button');button.type='button';button.className='study-browser-row';
       const label=document.createElement('strong');label.textContent=s.date;
       const detail=document.createElement('span');
-      detail.textContent=[s.drawOrder?'White order: '+s.drawOrder.map(fmt).join(' → '):'No draw order',s.video?.sampleCount?'Video '+s.video.sampleCount+' frames':null,s.equipment?.whiteMachine?'Machine '+s.equipment.whiteMachine:null].filter(Boolean).join(' · ');
+      detail.textContent=[s.drawOrder?'White order: '+s.drawOrder.map(fmt).join(' → '):'No draw order',s.video?.sampleCount?'Video '+s.video.sampleCount+' frames':null,s.video?.rack?.sampleCount?'Rack '+s.video.rack.sampleCount+' frames':null,s.equipment?.whiteMachine?'Machine '+s.equipment.whiteMachine:null].filter(Boolean).join(' · ');
       button.append(label,detail);button.addEventListener('click',()=>openDate(s.date));area.append(button);
     }
     if(studies.length>35){const p=document.createElement('small');p.textContent='Showing the latest 35. Choose an older date using the date field above.';area.append(p);}
@@ -349,8 +355,8 @@
   }
   function csv(value) {const s=String(value??'');return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
   function exportCSV() {
-    const rows=[['date','ball1','ball2','ball3','ball4','ball5','source','white_machine','red_machine','white_ball_set','red_ball_set','mixing_seconds','camera_view','video_filename','frame_samples','avg_motion','peak_motion','white_ball_timestamps','notes']];
-    for (const s of studies) rows.push([s.date,...(s.drawOrder||['','','','','']),s.orderSource,s.equipment?.whiteMachine,s.equipment?.redMachine,s.equipment?.whiteSet,s.equipment?.redSet,s.equipment?.mixingSeconds,s.equipment?.cameraView,s.video?.filename,s.video?.sampleCount,s.video?.averageMotion,s.video?.peakMotion,s.video?.markers?.map(m=>m.type+':'+m.number+'@'+Number(m.time).toFixed(1)).join(';'),s.notes]);
+    const rows=[['date','ball1','ball2','ball3','ball4','ball5','source','white_machine','red_machine','white_ball_set','red_ball_set','mixing_seconds','camera_view','video_filename','frame_samples','avg_motion','peak_motion','white_ball_timestamps','notes','rack_region','rack_group','rack_order','rack_legibility','rack_release_seconds','rack_samples','rack_avg_motion','rack_notes']];
+    for (const s of studies) rows.push([s.date,...(s.drawOrder||['','','','','']),s.orderSource,s.equipment?.whiteMachine,s.equipment?.redMachine,s.equipment?.whiteSet,s.equipment?.redSet,s.equipment?.mixingSeconds,s.equipment?.cameraView,s.video?.filename,s.video?.sampleCount,s.video?.averageMotion,s.video?.peakMotion,s.video?.markers?.map(m=>m.type+':'+m.number+'@'+Number(m.time).toFixed(1)).join(';'),s.notes,JSON.stringify(s.video?.rack?.region||''),s.video?.rack?.group,s.video?.rack?.loadingOrder,s.video?.rack?.legibility,s.video?.rack?.releaseTime,s.video?.rack?.sampleCount,s.video?.rack?.averageMotion,s.video?.rack?.notes]);
     downloadBlob(rows.map(r=>r.map(csv).join(',')).join('\r\n'),`powerball-drawing-studies-${new Date().toISOString().slice(0,10)}.csv`,'text/csv');
   }
   async function onHistorySync() {

@@ -37,6 +37,7 @@
     const byDate=new Map(draws.map(d=>[d.date,d]));
     const studies=studiesInput.filter(s=>s && byDate.has(s.date));
     const videos=studies.filter(s=>safe(s.video?.sampleCount)>0);
+    const racks=studies.filter(s=>safe(s.video?.rack?.sampleCount)>0);
     const ordered=studies.filter(s=>validOrder(s,byDate.get(s.date)));
     const equipment=studies.filter(s=>{
       const e=s.equipment||{};
@@ -76,6 +77,7 @@
     // and quality, and never extrapolate a large weight from two recordings.
     const videoStrength=0.045*videos.length/(videos.length+30);
     const equipmentStrength=0.035*equipment.length/(equipment.length+45);
+    const rackStrength=0.007*racks.length/(racks.length+60);
     const machineTotals=new Map();
     for(const s of equipment){
       const machine=s.equipment?.whiteMachine?.trim();
@@ -102,6 +104,14 @@
           }
         }
       }
+      // Rack-region pixel changes have at most tiny exploratory influence:
+      // no visible number label or position implies a known ball identity.
+      const rack=s.video?.rack;
+      if(rack && safe(rack.sampleCount)>0) {
+        const reliability=rack.legibility==='yes'?0.7:rack.legibility==='partial'?0.5:0.25;
+        const samples=clamp(safe(rack.sampleCount)/150,0.1,1);
+        change+=rackStrength*clamp((safe(rack.averageMotion)-10)/20,-1,1)*reliability*samples;
+      }
       if(s.equipment){
         const e=s.equipment;
         if(Number.isFinite(e.mixingSeconds)&&e.mixingSeconds>=0)
@@ -118,7 +128,7 @@
     }
     for(let n=1;n<=69;n++)white[n]=clamp(white[n],0.82,1.18);
     for(let n=1;n<=26;n++)red[n]=clamp(red[n],0.82,1.18);
-    return {white,red,position,pair,counts:{official:draws.length,order:ordered.length,video:videos.length,equipment:equipment.length,
+    return {white,red,position,pair,counts:{official:draws.length,order:ordered.length,video:videos.length,rack:racks.length,equipment:equipment.length,
       timestamps:timestamps.length,notes:notes.length},trainedThrough:draws[0]?.date || null};
   }
   function sample(model, allowRedMatch=true) {
@@ -189,10 +199,10 @@
     const m=snapshot;if(!m)return;
     const area=$('research-model-summary');if(!area)return;
     const c=m.counts;
-    area.textContent=`Using ${c.official.toLocaleString()} official results, ${c.order} verified draw orders, ${c.video} saved video studies, ${c.timestamps} timestamped studies, and ${c.equipment} equipment records. ${c.notes} descriptive notes preserved. Current data are re-read every time you generate.`;
+    area.textContent=`Using ${c.official.toLocaleString()} official results, ${c.order} verified draw orders, ${c.video} saved video studies, ${c.rack} rack-motion studies, ${c.timestamps} timestamped studies, and ${c.equipment} equipment records. ${c.notes} descriptive notes preserved. Current data are re-read every time you generate.`;
     const detail=$('research-model-detail');
     if(detail)detail.textContent=c.video<10
-      ? 'Video evidence is sparse; its numerical influence is intentionally extremely small. Motion is affected by camera cuts. Qualitative notes and machine IDs remain documented, but cannot responsibly predict an unknown future setup.'
+      ? 'Video evidence is sparse; its numerical influence is intentionally extremely small. Motion, including loading-rack motion, is affected by camera cuts. Starting-ball identities are not verified. Qualitative notes and machine IDs remain documented, but cannot responsibly predict an unknown future setup.'
       : 'Video and equipment features have a limited exploratory influence. No proven predictive advantage.';
   }
   async function runBacktest(){

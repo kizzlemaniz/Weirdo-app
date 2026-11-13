@@ -66,7 +66,7 @@
         </select>
         <p id="strategy-explainer" class="strategy-explainer">Research-informed combines historical winning results with saved draw-order and video studies. No measured predictive advantage. Without official history, selection falls back to fair randomness.</p>
         <div class="model-status" aria-label="Adaptive research inputs">
-          <p class="model-heading">RESEARCH-INFORMED ENGINE · V5</p>
+          <p class="model-heading">RESEARCH-INFORMED ENGINE · V6</p>
           <p id="research-model-summary" aria-live="polite">Loading local history and drawing research…</p>
           <p id="research-model-detail" class="model-detail">Numbers are selected with bounded experimental weights, always retaining randomness.</p>
           <div class="model-actions">
@@ -252,6 +252,40 @@
             <div><span>PEAK MOTION</span><strong id="motion-peak">—</strong></div>
           </div>
           <p class="video-source-hint">Motion is estimated from pixel changes, not from identified ball numbers. Camera cuts, zooms, lighting and compression can alter measurements. No prediction advantage has been demonstrated.</p>
+          <div class="rack-panel" id="rack-panel">
+            <h3>Loading rack inspection · V6</h3>
+            <p class="video-source-hint">Before the balls drop, pause the video and tap <strong>Capture rack frame</strong>. Draw a box around the visible loading rack. The app will magnify that region and measure how much it changes during playback. It does <strong>not</strong> identify numbers it cannot actually read, and motion after mixing does not preserve a reliable ball identity.</p>
+            <div class="video-toolrow">
+              <button type="button" id="rack-capture" class="page-btn">Capture rack frame</button>
+              <button type="button" id="rack-clear" class="page-btn">Clear rack region</button>
+            </div>
+            <canvas id="rack-preview" class="rack-preview" width="960" height="540" aria-label="Paused video image. Draw to select the ball rack region."></canvas>
+            <p id="rack-frame-status" class="rack-help" role="status">Pause a video just before the balls drop, then capture a frame.</p>
+            <div class="rack-controls">
+              <label>Ball group
+                <select id="rack-type" class="study-input"><option value="white">White rack (1–69)</option><option value="red">Red rack (1–26)</option><option value="unsure">Unclear / both racks</option></select>
+              </label>
+              <label>Close-up enhancement
+                <select id="rack-enhance" class="study-input"><option value="normal">Original pixels</option><option value="contrast">Increased contrast</option><option value="sharpen">Contrast + sharpen</option></select>
+              </label>
+            </div>
+            <p class="rack-help">Drag a rectangle on the captured picture to choose the rack. For best results, capture before the balls fall while the rack is in focus. Enhancement cannot reconstruct numbers missing from the recording.</p>
+            <canvas id="rack-zoom" class="rack-zoom" width="720" height="405" aria-label="Magnified selected rack frame"></canvas>
+            <div class="video-toolrow"><button type="button" id="rack-save-image" class="page-btn">Export enlarged rack image</button><button type="button" id="rack-mark-drop" class="page-btn">Mark release at video time</button></div>
+            <div class="rack-controls">
+              <label>Numbers legible in source?
+                <select id="rack-legible" class="study-input"><option value="unknown">Not verified / unreadable</option><option value="partial">Only some legible</option><option value="yes">Clearly legible</option></select>
+              </label>
+              <label>Ascending loading order?
+                <select id="rack-loading-order" class="study-input"><option value="unverified">Unverified in this video</option><option value="ascending">Visually verified ascending</option><option value="other">Visually observed different order</option></select>
+              </label>
+            </div>
+            <label for="rack-notes" class="rack-label">Rack observations / visible numbers (optional)</label>
+            <textarea id="rack-notes" class="study-input" rows="2" maxlength="500" placeholder="Only record numbers you can actually read. Describe camera cuts and obstructions."></textarea>
+            <p id="rack-status" class="rack-help" role="status">No rack movement measurements yet. Rewind to before release, then play while the rack region is selected.</p>
+            <div class="rack-stats"><span>RACK SAMPLES <strong id="rack-count">0</strong></span><span>AVG. CHANGE <strong id="rack-avg">—</strong></span><span>RELEASE MARK <strong id="rack-drop-time">—</strong></span></div>
+            <p class="video-source-hint">The selected region, motion summary, release marker, and your notes are included when you tap <strong>Attach current Video Lab measurements</strong> in Drawing Research. The video and captured image remain on your device. Rack position is not treated as a verified ball identity.</p>
+          </div>
           <div class="marking-area">
             <h3>Mark balls as they appear</h3>
             <p>While reviewing the video, you can manually tag a number and the moment it appears. After marking five main balls and one special ball, save the result to your bank.</p>

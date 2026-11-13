@@ -8,6 +8,14 @@
   let previousTime = -1;
   let points = [];
   let markers = [];
+  let rackRegion = null;
+  let rackFrame = null;
+  let rackCapturedAt = null;
+  let rackPoints = [];
+  let rackReleaseAt = null;
+  let dragStart = null;
+  let rackPreviousTime = -1;
+
   const $lab = id => document.getElementById(id);
   const video = () => $lab('drawing-video');
   const ctx = () => $lab('video-sample-canvas').getContext('2d', { willReadFrequently: true });
@@ -19,6 +27,7 @@
     previous = null;
     previousTime = -1;
     if (clearMarkers) markers = [];
+    if (clearMarkers) { rackRegion=null; rackFrame=null; rackCapturedAt=null; rackPoints=[]; rackReleaseAt=null; rackPreviousTime=-1; drawRackPreview(); renderRackZoom(); updateRackStatus(); }
     renderChart();
     updateStats();
     drawMarkers();
@@ -63,6 +72,27 @@
         const meanDifference = sum / gray.length;
         const index = Math.max(0, Math.min(100, meanDifference / 64 * 100));
         points.push({ time: t, motion: index });
+        // Motion inside the user-selected loading rack region only. This does
+        // not establish any numbered-ball identity or trajectory.
+        if (rackRegion && t > rackPreviousTime) {
+          const x0=Math.max(0,Math.floor(rackRegion.x*canvas.width/2)*2),
+            x1=Math.min(canvas.width,Math.ceil((rackRegion.x+rackRegion.w)*canvas.width/2)*2),
+            y0=Math.max(0,Math.floor(rackRegion.y*canvas.height)),
+            y1=Math.min(canvas.height,Math.ceil((rackRegion.y+rackRegion.h)*canvas.height));
+          let rackSum=0, rackCount=0;
+          for(let yy=y0;yy<y1;yy++) for(let xx=x0;xx<x1;xx+=2){
+            const idx=(yy*canvas.width+xx)/2;
+            rackSum+=Math.abs(gray[idx]-previous[idx]);rackCount++;
+          }
+          if(rackCount) {
+            const change=Math.max(0,Math.min(100,(rackSum/rackCount)/64*100));
+            rackPoints.push({time:t,motion:change});
+            if(rackPoints.length>40000)rackPoints=rackPoints.filter((_,i)=>i%2===0);
+            if(rackPoints.length%3===0)updateRackStatus();
+          }
+          rackPreviousTime=t;
+        }
+
         // Avoid unbounded in-memory video frame samples for very long files.
         // Summarize in fixed-size averaged bins if above 40k observations.
         if (points.length > 40000) {
@@ -92,7 +122,7 @@
     if (timer !== null) clearInterval(timer);
     timer = null;
     if (points.length) {
-      updateStats(); renderChart();
+      updateStats(); renderChart(); updateRackStatus();
       $lab('video-status').textContent = `Measured ${points.length.toLocaleString()} motion samples. Rewind or play more to continue.`;
     }
   }
@@ -177,6 +207,8 @@
     const lines=['type,time_seconds,value,ball_type,ball_number'];
     for (const p of points) lines.push(`motion,${p.time.toFixed(3)},${p.motion.toFixed(3)},,`);
     for (const m of markers) lines.push(`ball,${m.time.toFixed(3)},,${m.type},${m.number}`);
+    for (const p of rackPoints) lines.push(`rack_motion,${p.time.toFixed(3)},${p.motion.toFixed(3)},,`);
+    if(rackReleaseAt!==null) lines.push(`rack_release,${rackReleaseAt.toFixed(3)},,,`);
     downloadBlob(lines.join('\r\n'),`drawing-video-analysis-${new Date().toISOString().slice(0,10)}.csv`,'text/csv');
     toast('Video analysis exported');
   }
@@ -235,6 +267,79 @@
     caveat.textContent='Counts include every saved set, including your own generated picks. These are descriptive frequencies, not a validated forecast. With fair independent drawings, a number drawn often in the past is not more likely to appear next time.';
     target.append(caveat);
   }
+  function rackCanvas(id) { return $lab(id); }
+  function frameLocation(ev) {
+    const b=rackCanvas('rack-preview').getBoundingClientRect();
+    return {x:Math.max(0,Math.min(1,(ev.clientX-b.left)/b.width)),y:Math.max(0,Math.min(1,(ev.clientY-b.top)/b.height))};
+  }
+  function drawRackPreview() {
+    const canvas=rackCanvas('rack-preview'),cx=canvas.getContext('2d');
+    cx.fillStyle='#0c1c2d';cx.fillRect(0,0,canvas.width,canvas.height);
+    if(!rackFrame) {cx.fillStyle='#a6bcca';cx.font='26px sans-serif';cx.fillText('Capture paused video frame first',55,canvas.height/2);return;}
+    cx.drawImage(rackFrame,0,0,canvas.width,canvas.height);
+    if(rackRegion){cx.strokeStyle='#b6fb72';cx.lineWidth=6;cx.strokeRect(rackRegion.x*canvas.width,rackRegion.y*canvas.height,rackRegion.w*canvas.width,rackRegion.h*canvas.height);}
+  }
+  function renderRackZoom() {
+    const target=rackCanvas('rack-zoom'),cx=target.getContext('2d');
+    cx.fillStyle='#0c1c2d';cx.fillRect(0,0,target.width,target.height);
+    if(!rackFrame||!rackRegion){cx.fillStyle='#a6bcca';cx.font='20px sans-serif';cx.fillText('Select a rack region in the image above',25,60);return;}
+    const r=rackRegion, f=rackFrame;
+    cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
+    const mode=$lab('rack-enhance').value;
+    cx.filter=mode==='normal'?'none':mode==='sharpen'?'contrast(1.7) brightness(1.07)':'contrast(1.6) brightness(1.07)';
+    cx.drawImage(f,r.x*f.width,r.y*f.height,r.w*f.width,r.h*f.height,0,0,target.width,target.height);
+    cx.filter='none';
+    if(mode==='sharpen') {
+      const current=cx.getImageData(0,0,target.width,target.height);
+      const input=current.data,output=new Uint8ClampedArray(input);
+      for(let y=1;y<target.height-1;y++)for(let x=1;x<target.width-1;x++){
+        const k=(y*target.width+x)*4;
+        for(let c=0;c<3;c++)output[k+c]=Math.max(0,Math.min(255,5*input[k+c]-input[k-4+c]-input[k+4+c]-input[k-target.width*4+c]-input[k+target.width*4+c]));
+      }
+      current.data.set(output);cx.putImageData(current,0,0);
+    }
+  }
+  function captureRack() {
+    const v=video();
+    if(!v||v.readyState<2||!v.videoWidth){$lab('rack-frame-status').textContent='Load a video and move to a frame showing the racks first.';return;}
+    if(!v.paused){v.pause();}
+    const f=document.createElement('canvas');
+    const scale=Math.min(1,1200/v.videoWidth);f.width=Math.max(1,Math.round(v.videoWidth*scale));f.height=Math.max(1,Math.round(v.videoHeight*scale));
+    try {f.getContext('2d').drawImage(v,0,0,f.width,f.height);} catch(error){$lab('rack-frame-status').textContent='Could not capture video image: '+error.message;return;}
+    rackFrame=f;rackCapturedAt=v.currentTime;
+    rackRegion=null;rackPoints=[];rackReleaseAt=null;rackPreviousTime=-1;
+    $lab('rack-frame-status').textContent=`Captured frame at ${seconds(rackCapturedAt)}. Drag over the visible rack to choose a region.`;
+    drawRackPreview();renderRackZoom();updateRackStatus();
+  }
+  function updateRackStatus(){
+    const count=rackPoints.length,avg=count?rackPoints.reduce((a,p)=>a+p.motion,0)/count:null;
+    $lab('rack-count').textContent=count.toLocaleString();
+    $lab('rack-avg').textContent=count?avg.toFixed(1)+'/100':'—';
+    $lab('rack-drop-time').textContent=rackReleaseAt==null?'—':seconds(rackReleaseAt);
+    $lab('rack-status').textContent=!rackRegion?'No rack region selected. Capture a frame and draw around the loading rack.':
+      count?`Tracked ${count} frame changes within the selected rack. This measures visual change, not readable ball identities.`:
+      'Rack region selected. Rewind to before release and press Play to collect rack-only motion samples.';
+  }
+  function clearRack(){rackRegion=null;rackPoints=[];rackReleaseAt=null;rackPreviousTime=-1;drawRackPreview();renderRackZoom();updateRackStatus();}
+  function releaseMark(){if(!video().src)return;$lab('rack-drop-time').textContent=seconds(video().currentTime);rackReleaseAt=Number(video().currentTime.toFixed(2));updateRackStatus();}
+  function saveRackImage(){
+    if(!rackFrame||!rackRegion){$lab('rack-frame-status').textContent='Capture and select a rack region first.';return;}
+    const canvas=rackCanvas('rack-zoom');
+    canvas.toBlob(blob=>{if(!blob)return;const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='weirdo-rack-closeup.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);},'image/png');
+    $lab('rack-frame-status').textContent='Enhanced still exported. You can share the PNG here for a closer visual check.';
+  }
+  function rackSnapshot() {
+    if(!rackRegion&&!rackPoints.length)return null;
+    const count=rackPoints.length,mean=count?rackPoints.reduce((a,p)=>a+p.motion,0)/count:null;
+    const peak=count?Math.max(...rackPoints.map(p=>p.motion)):null;
+    const stride=Math.max(1,Math.ceil(count/250));
+    return {region:rackRegion?{...rackRegion}:null,capturedAt:rackCapturedAt,group:$lab('rack-type').value,
+      legibility:$lab('rack-legible').value,loadingOrder:$lab('rack-loading-order').value,
+      releaseTime:rackReleaseAt,notes:$lab('rack-notes').value.trim().slice(0,500),sampleCount:count,
+      averageMotion:mean==null?null:Number(mean.toFixed(2)),peakMotion:peak==null?null:Number(peak.toFixed(2)),
+      motionPoints:rackPoints.filter((_,i)=>i%stride===0).map(p=>({time:Number(p.time.toFixed(2)),motion:Number(p.motion.toFixed(2))}))};
+  }
+
   function getSnapshot() {
     const count = points.length;
     const average = count ? points.reduce((sum,p)=>sum+p.motion,0)/count : null;
@@ -247,11 +352,28 @@
       peakMotion: peak === null ? null : Number(peak.toFixed(2)),
       duration: Number.isFinite(video().duration) ? Number(video().duration.toFixed(2)) : null,
       motionPoints: points.filter((_,i)=>i%stride===0).map(p=>({time:Number(p.time.toFixed(2)),motion:Number(p.motion.toFixed(2))})),
-      markers: markers.map(m=>({...m}))
+      markers: markers.map(m=>({...m})),
+      rack: rackSnapshot()
     };
   }
   window.VideoLab = { getSnapshot };
   document.addEventListener('DOMContentLoaded', () => {
+    drawRackPreview();renderRackZoom();updateRackStatus();
+    const rackPreview=rackCanvas('rack-preview');
+    rackPreview.addEventListener('pointerdown',ev=>{if(!rackFrame)return;dragStart=frameLocation(ev);try{rackPreview.setPointerCapture(ev.pointerId);}catch(_){};});
+    rackPreview.addEventListener('pointerup',ev=>{
+      if(!dragStart)return;const end=frameLocation(ev);
+      const r={x:Math.min(dragStart.x,end.x),y:Math.min(dragStart.y,end.y),w:Math.abs(dragStart.x-end.x),h:Math.abs(dragStart.y-end.y)};
+      dragStart=null;
+      if(r.w<0.02||r.h<0.02)return;
+      rackRegion=r;rackPoints=[];rackPreviousTime=-1;
+      drawRackPreview();renderRackZoom();updateRackStatus();
+    });
+    $lab('rack-capture').addEventListener('click',captureRack);
+    $lab('rack-clear').addEventListener('click',clearRack);
+    $lab('rack-enhance').addEventListener('change',renderRackZoom);
+    $lab('rack-save-image').addEventListener('click',saveRackImage);
+    $lab('rack-mark-drop').addEventListener('click',releaseMark);
     $lab('video-file').addEventListener('change',ev=>{
       const file=ev.target.files?.[0];if(file)openClip(file);
       ev.target.value='';
@@ -259,7 +381,7 @@
     video().addEventListener('play',startSampling);
     video().addEventListener('pause',stopSampling);
     video().addEventListener('ended',stopSampling);
-    video().addEventListener('seeking',()=>{previous=null;previousTime=-1;});
+    video().addEventListener('seeking',()=>{previous=null;previousTime=-1;rackPreviousTime=-1;});
     $lab('reset-video').addEventListener('click',()=>resetMeasurements(true));
     $lab('observed-type').addEventListener('change',ev=>{$lab('observed-number').max=ev.target.value==='special'?'26':'69';});
     $lab('mark-observed').addEventListener('click',markBall);
